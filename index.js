@@ -12,7 +12,7 @@ const makeRole = require('link');
 const makeEmployee = require('link');
 
 // sql file to update an employee
-const updateEmployee = require('link');
+const modifyEmployee = require('link');
 
 
 
@@ -101,9 +101,9 @@ function init() {
                 if(answer.option == "add an employee") {
                     createEmployee();
                 }
-                // if(answer.option == "update an employee") {
-                //     updateEmployee();
-                // }
+                if(answer.option == "update an employee") {
+                    updateEmployee();
+                }
             })
     } catch (err) {
         console.log(err);
@@ -143,16 +143,16 @@ function createEmployee() {
     }
 }
 
-// function updateEmployee() {
-//     try {
-//         inquirer.prompt(addDept)
-//             .then((answer) => {
-//                 // then what?
-//             })
-//     } catch (err) {
-//         console.log(err);
-//     }
-// }
+function updateEmployee() {
+    try {
+        inquirer.prompt(addDept)
+            .then((answer) => {
+                // then what?
+            })
+    } catch (err) {
+        console.log(err);
+    }
+}
 
 // calling init function
 init();
