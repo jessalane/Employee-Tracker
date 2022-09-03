@@ -1,20 +1,6 @@
 // requried packages and imported files
 const inquirer = require('inquirer');
-
-// sql files to view tables
-const viewDepartment = require('link');
-const viewRole = require('link');
-const viewEmployee = require('link');
-
-// sql files to add information
-const makeDepartment = require('link');
-const makeRole = require('link');
-const makeEmployee = require('link');
-
-// sql file to update an employee
-const modifyEmployee = require('link');
-
-
+const sequelize = require('./config/connection.js');
 
 // arrays of questions
 const startOptions = [{
@@ -74,34 +60,34 @@ function init() {
     try {
         inquirer.prompt(startOptions)
             .then((answer) => {
-                if(answer.option == "view all departments") {
+                if (answer.option == "view all departments") {
                     // show departments table
-                    db.query('SELECT * FROM departments', function (err, results) {
+                    sequelize.query('SELECT * FROM departments', function (err, results) {
                         console.log(results);
-                      });
+                    });
                 }
-                if(answer.option == "view all roles") {
+                if (answer.option == "view all roles") {
                     // show roles table
-                    db.query('SELECT * FROM roles', function (err, results) {
+                    sequelize.query('SELECT * FROM roles', function (err, results) {
                         console.log(results);
-                      });
+                    });
                 }
-                if(answer.option == "view all employees") {
+                if (answer.option == "view all employees") {
                     // show employees table
-                    db.query('SELECT * FROM tables', function (err, results) {
+                    sequelize.query('SELECT * FROM tables', function (err, results) {
                         console.log(results);
-                      });
+                    });
                 }
-                if(answer.option == "add a department") {
+                if (answer.option == "add a department") {
                     createDept();
                 }
-                if(answer.option == "add a role") {
+                if (answer.option == "add a role") {
                     createRole();
                 }
-                if(answer.option == "add an employee") {
+                if (answer.option == "add an employee") {
                     createEmployee();
                 }
-                if(answer.option == "update an employee") {
+                if (answer.option == "update an employee") {
                     updateEmployee();
                 }
             })
@@ -114,7 +100,12 @@ function createDept() {
     try {
         inquirer.prompt(addDept)
             .then((answer) => {
-                // then what?
+                // insert data into departments table
+                sequelize.query('INSERT INTO departments (deptName) values (' + answer.dept + ')', function (err, results) {
+                    console.log(results);
+                });
+
+                init();
             })
     } catch (err) {
         console.log(err);
@@ -125,7 +116,12 @@ function createRole() {
     try {
         inquirer.prompt(addRole)
             .then((answer) => {
-                // then what?
+                // insert data into roles table
+                sequelize.query('INSERT INTO roles (title, department, salary) values (' + answer.role + answer.department + answer.salary + ')', function (err, results) {
+                    console.log(results);
+                });
+
+                init();
             })
     } catch (err) {
         console.log(err);
@@ -136,7 +132,14 @@ function createEmployee() {
     try {
         inquirer.prompt(addEmployee)
             .then((answer) => {
-                // then what?
+                // insert data into roles table
+                sequelize.query('INSERT INTO employees (firstName, lastName, title, manager) values (' + answer.empFirst + answer.empLast + answer.empRole + answer.manName + ')', function (err, results) {
+                    sequelize.query('INSERT INTO employees (`dept`,`salary`) SELECT `dept`,`salary` FROM roles WHERE `roles.title`= `employess.title`', function (err, results) {
+                        console.log(results);
+                    });
+                });
+
+                init();
             })
     } catch (err) {
         console.log(err);
