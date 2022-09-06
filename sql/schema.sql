@@ -26,8 +26,6 @@ CREATE TABLE employees (
     managerId INT,
     FOREIGN KEY (managerId)
     REFERENCES employees(id)
-    ON DELETE SET NULL,
-    dept VARCHAR(30),
-    salary DECIMAL
+    ON DELETE SET NULL
 )
 

@@ -36,20 +36,20 @@ const addDept = [{
 }];
 
 const addRole = [{
-        type: 'input',
-        message: 'What is the name of the role?',
-        name: 'role'
-    },
-    {
-        type: 'input',
-        message: 'What the name of the Department this role is in?',
-        name: 'department'
-    },
-    {
-        type: 'input',
-        message: 'What is the salary for this role?',
-        name: 'salary'
-    }
+    type: 'input',
+    message: 'What is the name of the role?',
+    name: 'role'
+},
+{
+    type: 'input',
+    message: 'What the name of the Department this role is in?',
+    name: 'department'
+},
+{
+    type: 'input',
+    message: 'What is the salary for this role?',
+    name: 'salary'
+}
 ];
 
 const addEmployee = [{
@@ -65,7 +65,7 @@ const addEmployee = [{
     {
         type: 'input',
         message: 'What is the role ID for this employee?',
-        name: 'empRole'
+        name: 'roleId'
     },
     {
         type: 'input',
@@ -164,12 +164,16 @@ function createRole() {
         .then((answer) => {
             // setting parameters var
             const roleParams = [answer.role, answer.department, answer.salary];
+            const roleString = JSON.stringify(roleParams).replace(/]|[[]/g, '');
 
             // insert data into roles table
-            db.query(`INSERT INTO roles VALUES (?)`, roleParams, (err, results) => {
-                if (err) throw err;
-                console.log("added successfully!");
-                init();
+            db.query(`INSERT INTO roles (title, dept, salary) VALUES (` + roleString + `)`, (err, results) => {
+                if (err) {
+                    console.log(err);
+                } else {
+                    console.log("added successfully!");
+                    init();
+                }
             });
         })
 }
@@ -179,19 +183,20 @@ function createEmployee() {
         .prompt(addEmployee)
         .then((answer) => {
             // setting parameters var
-            const sqlParams = JSON.stringify(answer.empFirst, answer.empLast, answer.empRole, answer.manName);
+            const empParams = [answer.empFirst, answer.empLast, answer.roleId, answer.manId];
+            const empString = JSON.stringify(empParams).replace(/]|[[]/g, '');
 
             // insert data into roles table
-            db.query(`INSERT INTO employees (firstName, lastName, title, manager) VALUES (` + sqlParams + `);`, function (err, results) {
-                db.query('INSERT INTO employees (`dept`,`salary`) SELECT `dept`,`salary` FROM roles WHERE `roles.title`= `employess.title`', function (err, results) {
-                    if (err) throw err;
+            db.query(`INSERT INTO employees (firstName, lastName, title, managerId) VALUES (` + empString + `);`, function (err, results) {
+                if (err) {
+                    console.log(err);
+                } else {
                     console.log("added successfully!");
                     init();
-                });
+                }
             });
         })
 }
-
 
 function updateEmployee() {
     try {
