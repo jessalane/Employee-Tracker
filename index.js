@@ -1,23 +1,42 @@
 // requried packages and imported files
 const inquirer = require('inquirer');
-const sequelize = require('./config/connection.js');
+const mysql = require('mysql2');
+require('console.table');
+
+// Connect to database
+const db = mysql.createConnection({
+        host: 'localhost',
+        // MySQL username,
+        user: 'root',
+        // TODO: Add MySQL password here
+        password: 'password',
+        database: 'employee_tracker_db'
+    },
+    console.log(`Connected to the employee_tracker_db database.`)
+);
+
+db.connect(function (err) {
+    if (err) throw err;
+    init();
+})
+
 
 // arrays of questions
 const startOptions = [{
     type: 'list',
     message: 'What would you like to do?',
     name: 'option',
-    choices: ['view all departments', 'view all roles', 'view all employees', 'add a department', 'add a role', 'add an employee', 'update an employee']
-}, ];
+    choices: ['view all departments', 'view all roles', 'view all employees', 'add a department', 'add a role', 'add an employee', 'update an employee role']
+}];
 
 const addDept = [{
-    type: 'list',
+    type: 'input',
     message: 'What is the name of the department?',
     name: 'dept'
-}, ];
+}];
 
 const addRole = [{
-        type: 'list',
+        type: 'input',
         message: 'What is the name of the role?',
         name: 'role'
     },
@@ -25,12 +44,12 @@ const addRole = [{
         type: 'input',
         message: 'What the name of the Department this role is in?',
         name: 'department'
-    }, ,
+    },
     {
         type: 'input',
         message: 'What is the salary for this role?',
         name: 'salary'
-    },
+    }
 ];
 
 const addEmployee = [{
@@ -45,117 +64,142 @@ const addEmployee = [{
     },
     {
         type: 'input',
-        message: 'What is the role for this employee?',
+        message: 'What is the role ID for this employee?',
         name: 'empRole'
     },
     {
         type: 'input',
-        message: 'What manager does this employee report to?',
-        name: 'manName'
-    },
+        message: 'What is the ID of the manager this employee report to?',
+        name: 'manId'
+    }
 ];
 
 // initialize funciton to run the questions
 function init() {
-    try {
-        inquirer.prompt(startOptions)
-            .then((answer) => {
-                if (answer.option == "view all departments") {
-                    // show departments table
-                    sequelize.query('SELECT * FROM departments', function (err, results) {
-                        console.log(results);
-                    });
-                }
-                if (answer.option == "view all roles") {
-                    // show roles table
-                    sequelize.query('SELECT * FROM roles', function (err, results) {
-                        console.log(results);
-                    });
-                }
-                if (answer.option == "view all employees") {
-                    // show employees table
-                    sequelize.query('SELECT * FROM tables', function (err, results) {
-                        console.log(results);
-                    });
-                }
-                if (answer.option == "add a department") {
+    inquirer
+        .prompt(startOptions)
+        .then(function (answer) {
+            switch (answer.option) {
+                case 'view all departments':
+                    // FUNCTION TO RUN
+                    viewDept();
+                    break;
+
+                case 'view all roles':
+                    // FUNCTION TO RUN
+                    viewRoles();
+                    break;
+
+                case 'view all employees':
+                    // FUNCTION TO RUN
+                    viewEmployees();
+                    break;
+
+                case 'add a department':
+                    // FUNCTION TO RUN
                     createDept();
-                }
-                if (answer.option == "add a role") {
+                    break;
+
+                case 'add a role':
+                    // FUNCTION TO RUN
                     createRole();
-                }
-                if (answer.option == "add an employee") {
+                    break;
+
+                case 'add an employee':
+                    // FUNCTION TO RUN
                     createEmployee();
-                }
-                if (answer.option == "update an employee") {
+                    break;
+
+                case 'update an employee role':
+                    // FUNCTION TO RUN
                     updateEmployee();
-                }
-            })
-    } catch (err) {
-        console.log(err);
-    }
+                    break;
+            }
+        })
+}
+
+function viewDept() {
+    db.query(`SELECT * FROM departments`, function (err, res) {
+        if (err) throw err;
+        console.table(res);
+        init();
+    });
+}
+
+function viewRoles() {
+    db.query(`SELECT * FROM roles`, function (err, res) {
+        if (err) throw err;
+        console.table(res);
+        init();
+    });
+}
+
+function viewEmployees() {
+    db.query(`SELECT * FROM employees`, function (err, res) {
+        if (err) throw err;
+        console.table(res);
+        init();
+    });
 }
 
 function createDept() {
-    try {
-        inquirer.prompt(addDept)
-            .then((answer) => {
-                // insert data into departments table
-                sequelize.query('INSERT INTO departments (deptName) values (' + answer.dept + ')', function (err, results) {
-                    console.log(results);
-                });
+    inquirer
+        .prompt(addDept)
+        .then((answer) => {
+            // setting parameters var
+            const sqlParams = JSON.stringify(answer.dept);
 
+            // running the sql query
+            db.query(`INSERT INTO departments (deptName) VALUES (` + sqlParams + `);`, function (err, results) {
+                if (err) throw err;
+                console.log('added successfully!');
                 init();
-            })
-    } catch (err) {
-        console.log(err);
-    }
+            });
+        })
 }
 
 function createRole() {
-    try {
-        inquirer.prompt(addRole)
-            .then((answer) => {
-                // insert data into roles table
-                sequelize.query('INSERT INTO roles (title, department, salary) values (' + answer.role + answer.department + answer.salary + ')', function (err, results) {
-                    console.log(results);
-                });
+    inquirer
+        .prompt(addRole)
+        .then((answer) => {
+            // setting parameters var
+            const roleParams = [answer.role, answer.department, answer.salary];
 
+            // insert data into roles table
+            db.query(`INSERT INTO roles VALUES (?)`, roleParams, (err, results) => {
+                if (err) throw err;
+                console.log("added successfully!");
                 init();
-            })
-    } catch (err) {
-        console.log(err);
-    }
+            });
+        })
 }
 
 function createEmployee() {
-    try {
-        inquirer.prompt(addEmployee)
-            .then((answer) => {
-                // insert data into roles table
-                sequelize.query('INSERT INTO employees (firstName, lastName, title, manager) values (' + answer.empFirst + answer.empLast + answer.empRole + answer.manName + ')', function (err, results) {
-                    sequelize.query('INSERT INTO employees (`dept`,`salary`) SELECT `dept`,`salary` FROM roles WHERE `roles.title`= `employess.title`', function (err, results) {
-                        console.log(results);
-                    });
-                });
+    inquirer
+        .prompt(addEmployee)
+        .then((answer) => {
+            // setting parameters var
+            const sqlParams = JSON.stringify(answer.empFirst, answer.empLast, answer.empRole, answer.manName);
 
-                init();
-            })
-    } catch (err) {
-        console.log(err);
-    }
+            // insert data into roles table
+            db.query(`INSERT INTO employees (firstName, lastName, title, manager) VALUES (` + sqlParams + `);`, function (err, results) {
+                db.query('INSERT INTO employees (`dept`,`salary`) SELECT `dept`,`salary` FROM roles WHERE `roles.title`= `employess.title`', function (err, results) {
+                    if (err) throw err;
+                    console.log("added successfully!");
+                    init();
+                });
+            });
+        })
 }
+
 
 function updateEmployee() {
     try {
         inquirer.prompt(addDept)
             .then((answer) => {
-                // then what?
+                // then what? update role?
             })
     } catch (err) {
         console.log(err);
     }
 }
-
-// calling init function
-init();

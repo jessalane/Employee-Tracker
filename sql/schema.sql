@@ -20,8 +20,13 @@ CREATE TABLE employees (
     id INT AUTO_INCREMENT PRIMARY KEY,
     firstName VARCHAR(30) NOT NULL,
     lastName VARCHAR(30) NOT NULL,
-    title VARCHAR(30) NOT NULL,
-    manager VARCHAR(30) NOT NULL,
+    roleId INT,
+    FOREIGN KEY (roleId)
+    REFERENCES roles(id),
+    managerId INT,
+    FOREIGN KEY (managerId)
+    REFERENCES employees(id)
+    ON DELETE SET NULL,
     dept VARCHAR(30),
     salary DECIMAL
 )
