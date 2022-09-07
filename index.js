@@ -26,7 +26,7 @@ const startOptions = [{
     type: 'list',
     message: 'What would you like to do?',
     name: 'option',
-    choices: ['view all departments', 'view all roles', 'view all employees', 'add a department', 'add a role', 'add an employee', 'update an employee']
+    choices: ['view all departments', 'view all roles', 'view all employees', 'add a department', 'add a role', 'add an employee', 'update an employee', 'exit']
 }];
 
 const addDept = [{
@@ -59,39 +59,36 @@ function init() {
         .then(function (answer) {
             switch (answer.option) {
                 case 'view all departments':
-                    // FUNCTION TO RUN
                     viewDept();
                     break;
 
                 case 'view all roles':
-                    // FUNCTION TO RUN
                     viewRoles();
                     break;
 
                 case 'view all employees':
-                    // FUNCTION TO RUN
                     viewEmployees();
                     break;
 
                 case 'add a department':
-                    // FUNCTION TO RUN
                     createDept();
                     break;
 
                 case 'add a role':
-                    // FUNCTION TO RUN
                     createRole();
                     break;
 
                 case 'add an employee':
-                    // FUNCTION TO RUN
                     createEmployee();
                     break;
 
                 case 'update an employee':
-                    // FUNCTION TO RUN
                     updateEmployee();
                     break;
+                case 'exit':
+                    db.end();
+                    console.log('Goodbye!');
+                    process.exit();
             }
         })
 }
@@ -113,7 +110,7 @@ function viewRoles() {
 }
 
 function viewEmployees() {
-    db.query(`SELECT * FROM employees`, function (err, res) {
+    db.query(`SELECT * FROM employees INNER JOIN roles ON roles.id = employees.roleId`, function (err, res) {
         if (err) throw err;
         console.table(res);
         init();
@@ -232,7 +229,7 @@ async function updateEmployee() {
                             name: 'choice',
                             choices: ['change employees role', 'change employees manager', 'change employees last name']
                         })
-                        .then(async(update) => {
+                        .then(async (update) => {
                             const updateRolesList = await db.promise().query(`SELECT id AS value, title AS name FROM roles`);
                             const updateManList = await db.promise().query(`SELECT id AS value, CONCAT(firstName, " ", lastName) AS name FROM employees WHERE managerId IS NULL`)
 
@@ -240,48 +237,48 @@ async function updateEmployee() {
                                 case 'change employees role':
                                     // FUNCTION TO RUN
                                     inquirer
-                                    .prompt({
-                                        type: 'list',
-                                        message: 'What would you like to change their role to?',
-                                        name: 'choice',
-                                        choices: updateRolesList[0]
-                                    })
-                                    .then((roleId) => {
-                                        db.query(`UPDATE employees SET roleId = ` + roleId["choice"] + ` WHERE id =` + chosenEmployee["id"]);
-                                        console.log("role updated!");
-                                        init();
-                                    })
+                                        .prompt({
+                                            type: 'list',
+                                            message: 'What would you like to change their role to?',
+                                            name: 'choice',
+                                            choices: updateRolesList[0]
+                                        })
+                                        .then((roleId) => {
+                                            db.query(`UPDATE employees SET roleId = ` + roleId["choice"] + ` WHERE id =` + chosenEmployee["id"]);
+                                            console.log("role updated!");
+                                            init();
+                                        })
                                     break;
 
                                 case 'change employees manager':
                                     // FUNCTION TO RUN
                                     inquirer
-                                    .prompt({
-                                        type: 'list',
-                                        message: 'Who would you like to change their manager to?',
-                                        name: 'choice',
-                                        choices: updateManList[0]
-                                    })
-                                    .then((managerId) => {
-                                        db.query(`UPDATE employees SET managerId = ` + managerId["choice"] + ` WHERE id =` + chosenEmployee["id"]);
-                                        console.log("manager updated!");
-                                        init();
-                                    })
+                                        .prompt({
+                                            type: 'list',
+                                            message: 'Who would you like to change their manager to?',
+                                            name: 'choice',
+                                            choices: updateManList[0]
+                                        })
+                                        .then((managerId) => {
+                                            db.query(`UPDATE employees SET managerId = ` + managerId["choice"] + ` WHERE id =` + chosenEmployee["id"]);
+                                            console.log("manager updated!");
+                                            init();
+                                        })
                                     break;
 
                                 case 'change employees last name':
                                     // FUNCTION TO RUN
                                     inquirer
-                                    .prompt({
-                                        type: 'input',
-                                        message: 'Who would you like to change their manager to?',
-                                        name: 'choice'
-                                    })
-                                    .then((lastName) => {
-                                        db.query(`UPDATE employees SET lastName = "` + lastName["choice"] + `" WHERE id = ` + chosenEmployee["id"]);
-                                        console.log("last name updated!");
-                                        init();
-                                    })
+                                        .prompt({
+                                            type: 'input',
+                                            message: 'Who would you like to change their manager to?',
+                                            name: 'choice'
+                                        })
+                                        .then((lastName) => {
+                                            db.query(`UPDATE employees SET lastName = "` + lastName["choice"] + `" WHERE id = ` + chosenEmployee["id"]);
+                                            console.log("last name updated!");
+                                            init();
+                                        })
                                     break;
                             }
 
