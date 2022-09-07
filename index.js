@@ -36,41 +36,19 @@ const addDept = [{
 }];
 
 const addRole = [{
-    type: 'input',
-    message: 'What is the name of the role?',
-    name: 'role'
-},
-{
-    type: 'input',
-    message: 'What the name of the Department this role is in?',
-    name: 'department'
-},
-{
-    type: 'input',
-    message: 'What is the salary for this role?',
-    name: 'salary'
-}
-];
-
-const addEmployee = [{
         type: 'input',
-        message: 'What the first name of this employee?',
-        name: 'empFirst'
+        message: 'What is the name of the role?',
+        name: 'role'
     },
     {
         type: 'input',
-        message: 'What the last name of this employee?',
-        name: 'empLast'
+        message: 'What the name of the Department this role is in?',
+        name: 'department'
     },
     {
         type: 'input',
-        message: 'What is the role ID for this employee?',
-        name: 'roleId'
-    },
-    {
-        type: 'input',
-        message: 'What is the ID of the manager this employee report to?',
-        name: 'manId'
+        message: 'What is the salary for this role?',
+        name: 'salary'
     }
 ];
 
@@ -178,16 +156,47 @@ function createRole() {
         })
 }
 
-function createEmployee() {
+async function createEmployee() {
+    const employeeList = await db.promise().query(`SELECT id AS value, CONCAT(firstName, " ", lastName) AS name FROM employees`)
+    employeeList[0].push({
+        name: "is a manager",
+        value: null
+    });
+    const rolesList = await db.promise().query(`SELECT id AS value, title AS name FROM roles`);
+
+    const addEmployee = [{
+            type: 'input',
+            message: 'What the first name of this employee?',
+            name: 'firstName'
+        },
+        {
+            type: 'input',
+            message: 'What the last name of this employee?',
+            name: 'lastName'
+        },
+        {
+            type: 'list',
+            message: 'What role does this employee have?',
+            name: 'roleId',
+            choices: rolesList[0]
+        },
+        {
+            type: 'list',
+            message: 'What is the name of this employees manager?',
+            name: 'managerId',
+            choices: employeeList[0]
+        }
+    ];
+
     inquirer
         .prompt(addEmployee)
         .then((answer) => {
-            // setting parameters var
-            const empParams = [answer.empFirst, answer.empLast, answer.roleId, answer.manId];
-            const empString = JSON.stringify(empParams).replace(/]|[[]/g, '');
+            if (answer.managerId === "") {
+                answer.managerId = null;
+            }
 
             // insert data into roles table
-            db.query(`INSERT INTO employees (firstName, lastName, title, managerId) VALUES (` + empString + `);`, function (err, results) {
+            db.query(`INSERT INTO employees SET ?`, answer, function (err, results) {
                 if (err) {
                     console.log(err);
                 } else {
@@ -198,13 +207,30 @@ function createEmployee() {
         })
 }
 
-function updateEmployee() {
-    try {
-        inquirer.prompt(addDept)
-            .then((answer) => {
-                // then what? update role?
-            })
-    } catch (err) {
-        console.log(err);
-    }
-}
+async function updateEmployee() {
+    const updateList = await db.promise().query(`SELECT id AS value, CONCAT(firstName, " ", lastName) AS name FROM employees`)
+
+    const updateEmployee = [
+        {
+            type: 'list',
+            message: 'Which employee would you like to update?',
+            name: 'managerId',
+            choices: updateList[0]
+        }
+    ];
+
+    inquirer
+        .prompt(updateEmployee)
+        .then((answer) => {
+
+            // insert data into roles table
+            db.query(`INSERT INTO employees SET ?`, answer, function (err, results) {
+                if (err) {
+                    console.log(err);
+                } else {
+                    console.log("added successfully!");
+                    init();
+                }
+            });
+        })
+};
