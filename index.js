@@ -26,7 +26,7 @@ const startOptions = [{
     type: 'list',
     message: 'What would you like to do?',
     name: 'option',
-    choices: ['view all departments', 'view all roles', 'view all employees', 'add a department', 'add a role', 'add an employee', 'update an employee role']
+    choices: ['view all departments', 'view all roles', 'view all employees', 'add a department', 'add a role', 'add an employee', 'update an employee']
 }];
 
 const addDept = [{
@@ -88,7 +88,7 @@ function init() {
                     createEmployee();
                     break;
 
-                case 'update an employee role':
+                case 'update an employee':
                     // FUNCTION TO RUN
                     updateEmployee();
                     break;
@@ -208,29 +208,85 @@ async function createEmployee() {
 }
 
 async function updateEmployee() {
-    const updateList = await db.promise().query(`SELECT id AS value, CONCAT(firstName, " ", lastName) AS name FROM employees`)
+    const updateList = await db.promise().query(`SELECT id AS value, CONCAT(firstName, " ", lastName) AS name FROM employees`);
 
-    const updateEmployee = [
-        {
-            type: 'list',
-            message: 'Which employee would you like to update?',
-            name: 'managerId',
-            choices: updateList[0]
-        }
-    ];
+    const updateEmployee = [{
+        type: 'list',
+        message: 'Which employee would you like to update?',
+        name: 'id',
+        choices: updateList[0]
+    }];
 
     inquirer
         .prompt(updateEmployee)
-        .then((answer) => {
+        .then((chosenEmployee) => {
 
-            // insert data into roles table
-            db.query(`INSERT INTO employees SET ?`, answer, function (err, results) {
+            db.query(`SELECT * FROM employees WHERE id =` + chosenEmployee["id"], function (err, pulledRow) {
                 if (err) {
                     console.log(err);
                 } else {
-                    console.log("added successfully!");
-                    init();
+                    inquirer
+                        .prompt({
+                            type: 'list',
+                            message: 'Which employee would you like to update?',
+                            name: 'choice',
+                            choices: ['change employees role', 'change employees manager', 'change employees last name']
+                        })
+                        .then(async(update) => {
+                            const updateRolesList = await db.promise().query(`SELECT id AS value, title AS name FROM roles`);
+                            const updateManList = await db.promise().query(`SELECT id AS value, CONCAT(firstName, " ", lastName) AS name FROM employees WHERE managerId IS NULL`)
+
+                            switch (update.choice) {
+                                case 'change employees role':
+                                    // FUNCTION TO RUN
+                                    inquirer
+                                    .prompt({
+                                        type: 'list',
+                                        message: 'What would you like to change their role to?',
+                                        name: 'choice',
+                                        choices: updateRolesList[0]
+                                    })
+                                    .then((roleId) => {
+                                        db.query(`UPDATE employees SET roleId = ` + roleId["choice"] + ` WHERE id =` + chosenEmployee["id"]);
+                                        console.log("role updated!");
+                                        init();
+                                    })
+                                    break;
+
+                                case 'change employees manager':
+                                    // FUNCTION TO RUN
+                                    inquirer
+                                    .prompt({
+                                        type: 'list',
+                                        message: 'Who would you like to change their manager to?',
+                                        name: 'choice',
+                                        choices: updateManList[0]
+                                    })
+                                    .then((managerId) => {
+                                        db.query(`UPDATE employees SET managerId = ` + managerId["choice"] + ` WHERE id =` + chosenEmployee["id"]);
+                                        console.log("manager updated!");
+                                        init();
+                                    })
+                                    break;
+
+                                case 'change employees last name':
+                                    // FUNCTION TO RUN
+                                    inquirer
+                                    .prompt({
+                                        type: 'input',
+                                        message: 'Who would you like to change their manager to?',
+                                        name: 'choice'
+                                    })
+                                    .then((lastName) => {
+                                        db.query(`UPDATE employees SET lastName = "` + lastName["choice"] + `" WHERE id = ` + chosenEmployee["id"]);
+                                        console.log("last name updated!");
+                                        init();
+                                    })
+                                    break;
+                            }
+
+                        })
                 }
             });
         })
-};
+}
